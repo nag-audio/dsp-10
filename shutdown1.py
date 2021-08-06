@@ -48,7 +48,7 @@ def check_port():
             with SMBus(0) as bus:
                 # Write a byte to address 0x10, offset 0
                 data = 0x87
-                bus.write_byte_data(0x10, 0, data)
+                #bus.write_byte_data(0x10, 0, data)
                 print("NEW DAC MODE: ", data)
             if k==1:        
                 os.system('mpc play')
