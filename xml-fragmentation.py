@@ -83,7 +83,7 @@ if __name__ == '__main__':
         # Запись в шину
         for index, fragment in enumerate(fragmented_data):
             print(f"Write fragment: [index: {index}, size: {len(fragment)} bytes]")
-            adau145x_write(register.address + 7*index, fragment, bus)
+            adau145x_write(register.address + 7*index, fragment.tolist(), bus)
     #     # Чтение из шины
     #     for fragment in fragment_data:
     #         print(adau145x_read(register.address, register.size, bus))
