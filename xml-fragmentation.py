@@ -68,6 +68,7 @@ if __name__ == '__main__':
     with SMBus(0) as bus:
         # Запись в шину
         for fragment in fragmented_data:
+            print(f"Write fragment: [size: {fragment.length}, data: [{fragment}]]")
             adau145x_write(register.address, fragment, bus)
     #     # Чтение из шины
     #     for fragment in fragment_data:
