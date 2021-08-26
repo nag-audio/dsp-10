@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import xml.etree.cElementTree as ET
 import time
+import array
 
 from smbus2 import SMBus, i2c_msg
 
@@ -18,14 +19,17 @@ class Register:
     def __str__(self) -> str:
         return self.__dict__.__str__()
 
-def query_register(name: str):
+class Program(Register):
+    pass
+
+def query_node(type: str, name: str):
     tree = ET.parse(XML_FILE)
-    node = tree.find(f".//Register/*[.='{name}']/..")
+    node = tree.find(f".//{type}/*[.='{name}']/..")
     params = {}
     for child in node:
         tag = child.tag
         if tag == 'Data':
-            params['data'] = list(map(lambda x: int(x, 16), child.text.split(', ')[:-1]))
+            params['data'] = array.array('H', (int(x, 16) for x in child.text.split(', ')[:-1]))
         elif tag == 'Name':
             params[tag.lower()] = child.text
         elif tag == 'Address':
@@ -34,7 +38,13 @@ def query_register(name: str):
             params['addr_incr'] = int(child.text)
         elif tag == 'Size':
             params[tag.lower()] = int(child.text)
-    return Register(**params)
+    return params
+
+def query_register(name: str):
+    return Register(**query_node('Register', name))
+
+def query_program(name: str):
+    return Program(**query_node('Program', name))
 
 def adau145x_write(reg_adr, adau_data_4B, bus: SMBus):
     bus.write_i2c_block_data(adau_addr, reg_adr >> 8, [reg_adr & 255] + adau_data_4B)
@@ -64,15 +74,17 @@ if __name__ == '__main__':
     register = query_register('DM1 Data')
     print(f"Register parsed: {time.time()-start}")
     fragmented_data = fragment_data(register.data)
-
+    
+    stop = time.time()
+    print(f"Stop: {stop}")
+    print(f"Delta: {stop-start}")
+    
     with SMBus(0) as bus:
         # Запись в шину
         for index, fragment in enumerate(fragmented_data):
-            print(f"Write fragment: [size: {fragment.length}, data: [{fragment}]]")
+            print(f"Write fragment: [index: {index}, size: {len(fragment)} bytes]")
             adau145x_write(register.address + 7*index, fragment, bus)
     #     # Чтение из шины
     #     for fragment in fragment_data:
     #         print(adau145x_read(register.address, register.size, bus))
-    stop = time.time()
-    print(f"Stop: {stop}")
-    print(f"Delta: {stop-start}")
+    
