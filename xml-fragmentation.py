@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
     with SMBus(0) as bus:
         for cmd in command_list:
-            if (cmd.is_delay):
+            if (cmd.is_delay()):
                 time.sleep(DELAY)
                 continue
             for index, fragment in enumerate(cmd.data):
