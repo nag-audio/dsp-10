@@ -7,7 +7,7 @@ from smbus2 import SMBus, i2c_msg
 
 XML_FILE = 'dsp-10.xml'
 adau_addr = 59  # 0x3b Адрес процессора на шине
-
+DELAY = 0.010 # 10 milliseconds
 
 class BaseObject:
     def __init__(self, name: str, address: int, addr_incr: int, size: int, data: list):
@@ -39,6 +39,9 @@ class BaseObject:
 
         fragmented_data.append(self.data[fragmented_size:])
         self.data = fragmented_data
+
+    def is_delay(self) -> bool:
+        return 'delay' in self.name.lower()
 
 
 class Register(BaseObject):
@@ -105,6 +108,9 @@ if __name__ == '__main__':
 
     with SMBus(0) as bus:
         for cmd in command_list:
+            if (cmd.is_delay):
+                time.sleep(DELAY)
+                continue
             for index, fragment in enumerate(cmd.data):
                 adau145x_write(cmd.address + 7*index, fragment.tolist(), bus)
     #     # Чтение из шины
