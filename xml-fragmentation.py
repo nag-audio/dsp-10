@@ -6,51 +6,82 @@ import array
 from smbus2 import SMBus, i2c_msg
 
 XML_FILE = 'dsp-10.xml'
-adau_addr = 59  # 0x3b Адрес процессора на шине
+# adau_addr = 59  # 0x3b Адрес процессора на шине
 
 
-class Register:
+class BaseObject:
     def __init__(self, name: str, address: int, addr_incr: int, size: int, data: list):
         self.name = name
         self.address = address
         self.addr_incr = addr_incr
         self.size = size
         self.data = data
+    
 
     def __str__(self) -> str:
-        return self.__dict__.__str__()
+        return f'(name: {self.name},'\
+            f' address: {self.address},'\
+            f' address_increment: {self.addr_incr},'\
+            f' size: {self.size})'
+    
+
+    def fragment_data(self, fragment_size=28) -> None:
+        '''
+        Divide our data list into parts of {fragment_size} values
+        '''
+        fragmented_size = 0
+        fragmented_data = []
+        initial_len = len(self.data)
+        
+        while initial_len - fragmented_size >= fragment_size:
+            fragmented_data += self.data[fragmented_size:fragmented_size + fragment_size]
+            fragmented_size += fragment_size
+
+        fragmented_data += self.data[fragmented_size:]
+        self.data = fragmented_data
 
 
-class Program(Register):
-    pass
+class Register(BaseObject):
+    def __str__(self) -> str:
+        return 'Register: ' + super.__str__
 
 
-def query_node(type: str, name: str):
+class Program(BaseObject):
+    def __str__(self) -> str:
+        return 'Program: ' + super.__str__
+
+
+def parse_xml(xml_name: str) -> list:
     tree = ET.parse(XML_FILE)
-    node = tree.find(f".//{type}/*[.='{name}']/..")
-    params = {}
-    for child in node:
-        tag = child.tag
-        if tag == 'Data':
-            params['data'] = array.array(
-                'H', (int(x, 16) for x in child.text.split(', ')[:-1]))
-        elif tag == 'Name':
-            params[tag.lower()] = child.text
-        elif tag == 'Address':
-            params[tag.lower()] = int(child.text)
-        elif tag == 'AddrIncr':
-            params['addr_incr'] = int(child.text)
-        elif tag == 'Size':
-            params[tag.lower()] = int(child.text)
-    return params
+    commands = []
+    for node in tree.find('IC'):
+        if node.tag == 'Register':
+            commands.append(xml_node_to_register(node))
+        elif node.tag == 'Program':
+            commands.append(xml_node_to_program(node))
+    return commands
+
+    
+def xml_node_to_object(node: ET.Element, cls: type):
+    base_object = cls(
+        node.find('Name').text,
+        node.find('Address').text,
+        node.find('AddrIncr').text,
+        node.find('Size').text,
+        array.array(
+                'H', (int(x, 16) for x in node.find('Data').text.split(', ')[:-1]))
+    )
+    base_object.fragment_data()
+    return base_object
 
 
-def query_register(name: str):
-    return Register(**query_node('Register', name))
+def xml_node_to_register(node) -> Register:
+    return xml_node_to_object(node, Register)
 
 
-def query_program(name: str):
-    return Program(**query_node('Program', name))
+def xml_node_to_program(node) -> Program:
+    return xml_node_to_object(node, Program)
+
 
 
 def adau145x_write(reg_adr, adau_data_4B, bus: SMBus):
@@ -77,27 +108,20 @@ def fragment_data(data: list):
         copyIndex += FRAGMENT_SIZE
     return fragmented_data
 
-
 if __name__ == '__main__':
     start = time.time()
-    print(f"Start: {start}")
 
-    register = query_register('DM1 Data')
+    command_list = parse_xml(XML_FILE)
     parsed_time = time.time()
-    print(f"Register parsed: {parsed_time-start}")
-    fragmented_data = fragment_data(register.data)
-    frag_time = time.time()
-    print(f"Fragmentation time: {frag_time-parsed_time}")
+    print(f"Objects parsed: {parsed_time-start}")
+
     with SMBus(0) as bus:
-        # Запись в шину
-        for index, fragment in enumerate(fragmented_data):
-            # print(
-            #     f"Write fragment: [index: {index}, size: {len(fragment)} bytes]")
-            adau145x_write(register.address + 7*index, fragment.tolist(), bus)
+        for cmd in command_list:
+            for index, fragment in enumerate(cmd.data):
+                adau145x_write(cmd.address + 7*index, fragment.tolist(), bus)
     #     # Чтение из шины
     #     for fragment in fragment_data:
     #         print(adau145x_read(register.address, register.size, bus))
     stop = time.time()
-    print(f"Write time: {stop-frag_time}")
-    print(f"Stop: {stop}")
+    print(f"Write time: {stop-parsed_time}")
     print(f"Delta: {stop-start}")
