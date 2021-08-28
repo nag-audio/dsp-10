@@ -6,7 +6,7 @@ import array
 from smbus2 import SMBus, i2c_msg
 
 XML_FILE = 'dsp-10.xml'
-# adau_addr = 59  # 0x3b Адрес процессора на шине
+adau_addr = 59  # 0x3b Адрес процессора на шине
 
 
 class BaseObject:
