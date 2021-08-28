@@ -65,9 +65,9 @@ def parse_xml(xml_name: str) -> list:
 def xml_node_to_object(node: ET.Element, cls: type):
     base_object = cls(
         node.find('Name').text,
-        node.find('Address').text,
-        node.find('AddrIncr').text,
-        node.find('Size').text,
+        int(node.find('Address').text),
+        int(node.find('AddrIncr').text),
+        int(node.find('Size').text),
         array.array(
                 'H', (int(x, 16) for x in node.find('Data').text.split(', ')[:-1]))
     )
