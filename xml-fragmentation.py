@@ -106,7 +106,7 @@ if __name__ == '__main__':
     with SMBus(0) as bus:
         for cmd in command_list:
             for index, fragment in enumerate(cmd.data):
-                adau145x_write(cmd.address + 7*index, fragment.tolist(), bus)
+                adau145x_write(cmd.address + 7*index, fragment, bus)
     #     # Чтение из шины
     #     for fragment in fragment_data:
     #         print(adau145x_read(register.address, register.size, bus))
