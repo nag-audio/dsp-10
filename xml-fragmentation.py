@@ -34,10 +34,10 @@ class BaseObject:
         initial_len = len(self.data)
         
         while initial_len - fragmented_size >= fragment_size:
-            fragmented_data += self.data[fragmented_size:fragmented_size + fragment_size]
+            fragmented_data.append(self.data[fragmented_size:fragmented_size + fragment_size])
             fragmented_size += fragment_size
 
-        fragmented_data += self.data[fragmented_size:]
+        fragmented_data.append(self.data[fragmented_size:])
         self.data = fragmented_data
 
 
@@ -95,18 +95,6 @@ def adau145x_read(reg_adr, length, bus: SMBus):
     bus.i2c_rdwr(write, read)
     return read.buf[:length]
 
-
-def fragment_data(data: list):
-    FRAGMENT_SIZE = 28     # bytes
-    copyIndex = 0
-    fragmented_data = []
-    while copyIndex < len(data):
-        if (len(data) - copyIndex) > FRAGMENT_SIZE:
-            fragmented_data.append(data[copyIndex:copyIndex+FRAGMENT_SIZE])
-        else:
-            fragmented_data.append(data[copyIndex:])
-        copyIndex += FRAGMENT_SIZE
-    return fragmented_data
 
 if __name__ == '__main__':
     start = time.time()
