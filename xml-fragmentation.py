@@ -1,3 +1,17 @@
+'''
+Добавить:
+    Работа через консоль
+                    -filename-    -cmd- -arg1-          -arg2-          -arg3-
+        0. python3 ./xml-fragmentation.pyc xload [filename]                                  - return pass/fail string   (XML to DSP upload)
+            @python3 ./xml-fragmentation.pyc xload ./dsp-10.xml
+        1. python3 ./xml-fragmentation.pyc adrrd [addr:int16] [length:DEC]                   - return string list        (direct read to I2C)
+            @python3 ./xml-fragmentation.pyc adrrd 62816 2                   - return: 8192
+        2. python3 ./xml-fragmentation.pyc adrwr [addr:int16] [DATA:32b int]               - return pass/fail string   (direct write to I2C)
+            @python3 ./xml-fragmentation.pyc adrwr 45055 0x00, 0x00, 0x00, 0x61
+        3. python3 ./xml-fragmentation.pyc xmlrd [TAG:string] [NAME:string]                  - return string list        (TAG of register/module/program) (NAME of DATA/)
+        4. python3 ./xml-fragmentation.pyc xmlwr [TAG:string] [NAME:string] [DATA:byte list] - return pass/fail string 
+'''
+
 #!/usr/bin/env python3
 import xml.etree.cElementTree as ET
 import time
@@ -104,7 +118,7 @@ if __name__ == '__main__':
 
     command_list = parse_xml(XML_FILE)
     parsed_time = time.time()
-    print(f"Objects parsed: {parsed_time-start}")
+    print(f"Parsed: {round(parsed_time-start,1)}" + ' sec.')
 
     with SMBus(0) as bus:
         for cmd in command_list:
@@ -113,9 +127,28 @@ if __name__ == '__main__':
                 continue
             for index, fragment in enumerate(cmd.data):
                 adau145x_write(cmd.address + 7*index, fragment.tolist(), bus)
-    #     # Чтение из шины
-    #     for fragment in fragment_data:
-    #         print(adau145x_read(register.address, register.size, bus))
+        time.sleep(DELAY)
+        adau145x_write(cmd.address + 7*index, fragment.tolist(), bus)
+    
+
+    #print(f"Write time: {stop-parsed_time}")
+    
+stop = time.time()
+print(f"Bus write: {round(stop-start,1)}" + ' sec.')
+
+with SMBus(0) as bus:
+    # DAC run
+    data = 0x87
+    bus.write_byte_data(0x10, 0, data)
+    # MUTE OFF
     stop = time.time()
-    print(f"Write time: {stop-parsed_time}")
-    print(f"Delta: {stop-start}")
+    adau145x_write(0xF528, [0x00, 0x01], bus)
+    
+    '''
+                <Name>IC 1.MP8_WRITE</Name>
+            <Address>62760</Address>
+            <AddrIncr>0</AddrIncr>
+            <Size>2</Size>
+            <Data>0x00, 0x00, </Data>
+'''
+    
