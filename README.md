@@ -11,7 +11,7 @@ Automatic load dsp project files from DSP10.
 4. Automaticly open dsp-10.dspproj in SigmaStudio 
 
 -Attention! now you need change IP address in Sigma project (default: 192.168.1.170 port: 8086), then:
-open Hardware configuration tab ---> Right mouse button on TCPIP box ---> Show TCPIP settings --> enter current IP(check it in dhcp server)  DSP address 
+open Hardware configuration tab ---> Right mouse button on TCPIP box ---> Show TCPIP settings --> enter current IP address (check it in dhcp server)
 
 After change parametrs in block schematic you need make uploading to DSP
 1.  press "SAVE" button (Ctrl+S)
