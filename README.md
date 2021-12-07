@@ -8,7 +8,7 @@ Automatic load dsp project files from DSP10.
 1. Connect DSP to LAN Router wint active DHCP server by Wire and check dynamic IP address from PC
 2. Run "downloader_32.exe" (WIN10/64 was tested)
 3. Program will find DSP10 in local network and download files to:  "C:\NAG\DSP-10"
-4. Automaticly open dsp-10.dspproj in SigmaStudio 
+4. Automaticly will be open dsp-10.dspproj in SigmaStudio on your PC
 
 -Attention! now you need change IP address in Sigma project (default: 192.168.1.170 port: 8086), then:
 open Hardware configuration tab ---> Right mouse button on TCPIP box ---> Show TCPIP settings --> enter current IP address (check it in dhcp server)
