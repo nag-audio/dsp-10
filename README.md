@@ -2,6 +2,7 @@
 audio processor
 
 ---------------------Downloader_32.exe-----------------------------
+
 Automatic load dsp project files from DSP10.
 0. Install "SigmaStudio 4.6" on your PC (NOT need make run after install)
 1. Connect DSP to LAN Router wint active DHCP server by Wire and check dynamic IP address from PC
